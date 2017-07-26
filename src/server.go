@@ -13,7 +13,12 @@ import (
 var top_songs []string
 
 func handler(w http.ResponseWriter, r *http.Request) {
-    fmt.Fprintf(w, "%v", top_songs)
+    resp := "<html><head></head><body>"
+    for i, song := range top_songs {
+        resp += fmt.Sprintf("<p>%v) %v", i+1, song)
+    }
+    resp += "</body></html>"
+    fmt.Fprintf(w, resp)
 }
 
 func refresh_top_songs() {
