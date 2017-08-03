@@ -1,0 +1,20 @@
+
+body {
+  background-color: #171e1e;
+}
+
+.jumbotron {
+  color: #cafdff;
+  background-image: url("img/swiss-trail.jpg");
+  background-position: center center;
+  background-size: 100%;
+  text-align: center;
+}
+
+.jumbotron span {
+  background-color: rgba(23, 30, 30, 0.7);
+}
+
+.white-text {
+  color: white;
+}
