@@ -77,7 +77,11 @@ if __name__ == '__main__':
     if os.path.exists(fname):
         with open(fname,'r',encoding='utf-8') as f:
             reader = csv.reader(f)
-            for date, name in reader:
+            for line in reader:
+                if len(line) > 0:
+                    date, name = line
+                else:
+                    continue
                 if date == headers[0]:
                     continue
                 if not date in data:
