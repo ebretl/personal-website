@@ -55,8 +55,8 @@ def update_all():
 
 def gen_graph_csv():
     m = history_length
-    n = 30 # num songs to graph
-    sigma = 10
+    n = 25 # num songs to graph
+    sigma = 5
 
     day_counters = []
     overall_counter = Counter()
@@ -95,5 +95,5 @@ if __name__ == '__main__':
         except:
             log("error on gen_graph_csv")
         
-        time.sleep(60 * 60)
+        time.sleep(60 * 10)
         # sys.exit(0)
