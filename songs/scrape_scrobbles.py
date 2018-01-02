@@ -10,10 +10,11 @@ from scipy.ndimage.filters import gaussian_filter1d
 import csv
 
 
-log_file = '/tmp/www-res/ebretl-website-%d.log' % int(time.time())
+log_file = os.path.join(os.path.dirname(__file__), '../private/logs/%d.log' % int(time.time()))
+pkl_dir = os.path.join(os.path.dirname(__file__), '../private/song-pickles')
 graph_file = os.path.join(os.path.dirname(__file__), '../data/song-graph-data.csv')
-pkl_dir = '/tmp/www-res/song-pickles'
 
+history_length = 150
 
 def log(msg):
     with open(log_file, 'a') as f:
@@ -43,7 +44,7 @@ def get_songs_for_date(date_str, page=1):
     return counter
 
 def update_all():
-    for days_ago in range(364, -1, -1):
+    for days_ago in range(history_length-1, -1, -1):
         path = path_days_ago(days_ago)
         
         if not os.path.exists(path) or days_ago < 2:
@@ -53,9 +54,9 @@ def update_all():
             log(str(counter))
 
 def gen_graph_csv():
-    m = 150 # days of history
+    m = history_length
     n = 30 # num songs to graph
-    sigma = 4
+    sigma = 10
 
     day_counters = []
     overall_counter = Counter()
@@ -80,14 +81,19 @@ def gen_graph_csv():
 if __name__ == '__main__':
     if not os.path.exists(pkl_dir):
         os.makedirs(pkl_dir)
+    if not os.path.exists(os.path.dirname(log_file)):
+        os.makedirs(os.path.dirname(log_file))
 
     while True:
-        # try:
-        update_all()
-        # except:
-        #     log("error on update_all")
+        try:
+            update_all()
+        except:
+            log("error on update_all")
 
-        gen_graph_csv()
+        try:
+            gen_graph_csv()
+        except:
+            log("error on gen_graph_csv")
         
-        # time.sleep(60 * 5)
-        sys.exit(0)
+        time.sleep(60 * 60)
+        # sys.exit(0)

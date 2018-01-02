@@ -1,4 +1,4 @@
-
-src/top_songs\.txt
+private/song-pickles/
+private/logs/
 
 data/song-graph-data\.csv
