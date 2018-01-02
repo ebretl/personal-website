@@ -53,14 +53,13 @@ def update_all():
             log(str(counter))
 
 def gen_graph_csv():
-    n = 240 # days of history
-    k = 4 # pixels per day
-    m = 75 # num songs to graph
-    sigma = 10
+    m = 150 # days of history
+    n = 30 # num songs to graph
+    sigma = 4
 
     day_counters = []
     overall_counter = Counter()
-    for days_ago in range(n-1, -1, -1):
+    for days_ago in range(m-1, -1, -1):
         path = path_days_ago(days_ago)
         with open(path, 'rb') as f:
             counter = pickle.load(f)
@@ -69,11 +68,12 @@ def gen_graph_csv():
 
     with open(graph_file, 'w') as f:
         csv_writer = csv.writer(f)
-        for title, count in overall_counter.most_common(m):
-            arr = np.zeros(n*k)
-            for i in range(n*k):
-                arr[i] = day_counters[i//k][title]
-            arr = gaussian_filter1d(arr, sigma)
+        csv_writer.writerow(['title','count']+['x%d'%i for i in range(m)])
+        for title, count in overall_counter.most_common(n):
+            arr = np.zeros(m)
+            for i in range(m):
+                arr[i] = day_counters[i][title]
+            arr = gaussian_filter1d(arr, sigma, mode='reflect')
             csv_writer.writerow([title, count] + ['0' if x<0.01 else '%.2f'%x for x in arr])
 
 
@@ -83,7 +83,7 @@ if __name__ == '__main__':
 
     while True:
         # try:
-        # update_all()
+        update_all()
         # except:
         #     log("error on update_all")
 
