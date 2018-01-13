@@ -8,13 +8,14 @@ import pickle
 import numpy as np
 from scipy.ndimage.filters import gaussian_filter1d
 import csv
+import lzma
 
 
 log_file = os.path.join(os.path.dirname(__file__), '../private/logs/%d.log' % int(time.time()))
 pkl_dir = os.path.join(os.path.dirname(__file__), '../private/song-pickles')
 graph_file = os.path.join(os.path.dirname(__file__), '../data/song-graph-data.csv')
 
-history_length = 150
+history_length = 120
 
 def log(msg):
     with open(log_file, 'a') as f:
@@ -22,7 +23,7 @@ def log(msg):
 
 def path_days_ago(days_ago):
     date_str = (date.today() - timedelta(days_ago)).isoformat()
-    path = os.path.join(pkl_dir, date_str + '.pkl')
+    path = os.path.join(pkl_dir, date_str + '.pkl.lzma')
     return path
 
 def get_songs_for_date(date_str, page=1):
@@ -48,21 +49,21 @@ def update_all():
         path = path_days_ago(days_ago)
         
         if not os.path.exists(path) or days_ago < 2:
-            counter = get_songs_for_date(os.path.split(path)[1][:-4])
-            with open(path, 'wb') as f:
+            counter = get_songs_for_date(os.path.split(path)[1].split('.')[0])
+            with lzma.open(path, 'wb') as f:
                 pickle.dump(counter, f)
             log(str(counter))
 
 def gen_graph_csv():
     m = history_length
     n = 25 # num songs to graph
-    sigma = 5
+    sigma = 3
 
     day_counters = []
     overall_counter = Counter()
     for days_ago in range(m-1, -1, -1):
         path = path_days_ago(days_ago)
-        with open(path, 'rb') as f:
+        with lzma.open(path, 'rb') as f:
             counter = pickle.load(f)
             day_counters.append(counter)
             overall_counter.update(counter)
@@ -95,5 +96,5 @@ if __name__ == '__main__':
         except:
             log("error on gen_graph_csv")
         
-        time.sleep(60 * 10)
-        # sys.exit(0)
+        # time.sleep(60 * 10)
+        sys.exit(0)

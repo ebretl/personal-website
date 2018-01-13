@@ -5,11 +5,17 @@
 
 p#graph-info-readout {
   font-size: 15;
-  color: black;
+  color: white;
+  width: 960px;
+  word-wrap: normal;
+}
+
+html {
+  background-color: #222;
 }
 
 svg {
-  background-color: white;
+  /*background-color: #222;*/
 }
 
 </style>
@@ -61,8 +67,8 @@ d3.csv("data/song-graph-data.csv", function(error, data) {
     .data(layers)
     .enter().append("path")
       .attr("d", area)
-      .attr("fill", () => z(Math.random()) )
-      .attr("stroke", "white")
+      .attr("fill", (d,i) => z((i/4.0) % 1.0))
+      .attr("stroke", "#222")
       .on("mouseover", (d,i) => {
         infoName = data[i].title;
         infoCount = data[i].count;
