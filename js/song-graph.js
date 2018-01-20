@@ -20,9 +20,14 @@ var makeGraph = function(graphName) {
           return a;
         })));
 
-    var svg = d3.select("#"+graphName+"-graph-svg"),
-        width = +svg.attr("width"),
-        height = +svg.attr("height");
+    var svg = d3.select("#"+graphName+"-graph-svg");
+
+    var parent = $("#"+graphName+"-graph-svg").parent(),
+        width = parent.width(),
+        height = width * 0.4;
+    svg.attr("width", width);
+    svg.attr("height", height);
+
 
     var x = d3.scaleLinear()
         .domain([0, m])
@@ -40,6 +45,8 @@ var makeGraph = function(graphName) {
         .y1(function(d) { return y(d[1]); });
 
     var infoName = "", infoCount = 0;
+
+    // svg.selectAll("path").remove();
 
     svg.selectAll("path")
       .data(layers)

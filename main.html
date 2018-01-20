@@ -17,13 +17,14 @@
       margin: auto;
       font-family: 'Roboto', sans-serif;
       font-size: 1.5em;
+      word-wrap: normal;
     }
 
     div.section {
       position: relative;
       width: 100%;
       margin: 0;
-      margin-top: 2em;
+      margin-top: 2rem;
     }
 
     div.element {
@@ -37,16 +38,26 @@
       font-family: 'Roboto Mono', monospace;
     }
 
+    svg {
+      float: center;
+      margin: auto;
+    }
+
     #cool-logo-thing {
       margin: 0;
       width: 100%;
       stroke: #12dfe2; 
       fill: transparent;
     }
+
+    p.graph-info {
+      font-size: 1.2rem;
+      text-align: center;
+    }
   </style>
 
   <script src="https://code.jquery.com/jquery-3.2.1.min.js" type="text/javascript"></script>
-  <script src="https://d3js.org/d3.v4.min.js"></script> 
+  <script src="https://d3js.org/d3.v4.min.js"></script>
 </head>
 
 
@@ -64,10 +75,17 @@
   </div>
   
   <div class="section">
-    <p>asdf asdf asd fasdfasdfasdf asdf asdf asdf asdf asdf asdf asdf asdf asdf asdf asdf asdf asdf asdf asd fasdf asdfasdf asdf asdf asdfasd asdf asdf asdf asdf asdf asdf asdf asdf asdfasdf asdf</p>
+    <svg id="artist-graph-svg"></svg>
+    <p id="artist-graph-info" class="graph-info">Mouse over graph for more information</p>
+
+    <p style="margin: 20;"></p>
+
+    <svg id="song-graph-svg"></svg>
+    <p id="song-graph-info" class="graph-info">Mouse over graph for more information</p>
   </div>
 </body>
 
+<script src="js/song-graph.js"></script>
 
 <script type="text/javascript">
 // weird logo things
@@ -92,7 +110,12 @@ var setUpSvgLogo = function() {
 setUpSvgLogo();
 window.addEventListener('resize', setUpSvgLogo);
 
-
+window.addEventListener('resize', function() {
+  $('#artist-graph-svg')[0].innerHTML = "";
+  $('#song-graph-svg')[0].innerHTML = "";
+  makeGraph("song");
+  makeGraph("artist");
+});
 
 </script>
 
