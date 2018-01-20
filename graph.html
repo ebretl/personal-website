@@ -1,121 +1,37 @@
 <!DOCTYPE html>
 <meta charset="utf-8">
 <title>Streamgraph</title>
-<style>
 
-p#graph-info-readout {
+<head>
+<style>
+p.graph-info {
   font-size: 15;
   color: white;
   width: 960px;
   word-wrap: normal;
 }
 
-html {
+body {
   background-color: #222;
 }
 
-svg {
-  /*background-color: #222;*/
-}
-
+/*svg {
+  background-color: #222;
+}*/
 </style>
-<svg width="960" height="500"></svg>
-<p id="graph-info-readout">Mouse over graph for more information<p>
-<script src="https://d3js.org/d3.v4.min.js"></script>
-<script>
 
-d3.csv("data/song-graph-data.csv", function(error, data) {
-  // console.log(data);
+<script src="https://d3js.org/d3.v4.min.js"></script> 
+</head>
 
-  var n = data.length, // number of layers
-      m = Object.keys(data[0]).length-2; // number of samples per layer
 
-  var stack = d3.stack().keys(d3.range(n)).order(d3.stackOrderInsideOut).offset(d3.stackOffsetWiggle),
-      layers = stack(d3.transpose(d3.range(n).map(function(i) {
-        // console.log(data);
-        a = [];
-        // console.log(i);
-        // console.log(data[i])
-        for (var j = 0; j < m; j++) {
-          a.push(data[i]["x"+j]);
-        }
-        return a;
-      })));
+<body>
+  <svg id="artist-graph-svg" width="800" height="500"></svg>
+  <p id="artist-graph-info" class="graph-info">Mouse over graph for more information</p>
 
-  var svg = d3.select("svg"),
-      width = +svg.attr("width"),
-      height = +svg.attr("height");
+  <p style="margin: 20;"></p>
 
-  var x = d3.scaleLinear()
-      .domain([0, m])
-      .range([0, width]);
+  <svg id="song-graph-svg" width="800" height="500"></svg>
+  <p id="song-graph-info" class="graph-info">Mouse over graph for more information</p>
+</body>
 
-  var y = d3.scaleLinear()
-      .domain([d3.min(layers, stackMin), d3.max(layers, stackMax)])
-      .range([height, 0]);
-
-  var z = d3.interpolateCool;
-
-  var area = d3.area()
-      .x(function(d, i) { return x(i); })
-      .y0(function(d) { return y(d[0]); })
-      .y1(function(d) { return y(d[1]); });
-
-  var infoName = "", infoCount = 0;
-
-  svg.selectAll("path")
-    .data(layers)
-    .enter().append("path")
-      .attr("d", area)
-      .attr("fill", (d,i) => z((i/4.0) % 1.0))
-      .attr("stroke", "#222")
-      .on("mouseover", (d,i) => {
-        infoName = data[i].title;
-        infoCount = data[i].count;
-      })
-      .on("mouseout", (d,i) => {
-        if (infoName == data[i].title) {
-          infoName = ""
-          infoCount = 0
-        }
-      })
-      .append("title")
-        .text((d,i) => data[i].title+" ["+data[i].count+" listens]");
-
-  // progressLine = svg.append("line")
-  //   .attr("id", "graph-progress-line")
-  //   .attr("style", "stroke:black; stroke-width:2")
-  //   .attr("x1", 0).attr("x2", 0)
-  //   .attr("y1", 0).attr("y2", height);
-
-  function stackMax(layer) {
-    return d3.max(layer, function(d) { return d[1]; });
-  }
-
-  function stackMin(layer) {
-    return d3.min(layer, function(d) { return d[0]; });
-  }
-
-  svg_dom = document.querySelector('svg');
-  svg_dom.addEventListener('mousemove', evt => {
-    var pt = svg_dom.createSVGPoint();
-    pt.x = evt.clientX;
-    pt.y = evt.clientY;
-    var loc = pt.matrixTransform(svg_dom.getScreenCTM().inverse());
-
-    // progressLine.attr("x1",loc.x).attr("x2",loc.x);
-
-    nDays = (loc.x * m / width).toFixed(0);
-    infoDaysAgo = m - nDays;
-    dateObj = new Date();
-    dateObj.setDate(dateObj.getDate() - infoDaysAgo);
-    // console.log(dateObj.toDateString().slice(4));
-    p = document.getElementById("graph-info-readout")
-    p.textContent = "date: " + dateObj.toDateString().slice(4);
-    p.textContent += "  |  song: " + infoName;
-    p.textContent += "  |  listen count: " + infoCount;
-  });
-
-});
-
-</script>
+<script src="js/song-graph.js"></script>

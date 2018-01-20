@@ -9,15 +9,18 @@ import numpy as np
 from scipy.ndimage.filters import gaussian_filter1d
 import csv
 import lzma
+import re
 
+base_dir = os.path.dirname(__file__)
+log_file = os.path.join(base_dir, '../private/logs/%d.log' % int(time.time()))
+pkl_dir = os.path.join(base_dir, '../private/song-pickles')
+song_graph_file = os.path.join(base_dir, '../data/song-graph-data.csv')
+artist_graph_file = os.path.join(base_dir, '../data/artist-graph-data.csv')
 
-log_file = os.path.join(os.path.dirname(__file__), '../private/logs/%d.log' % int(time.time()))
-pkl_dir = os.path.join(os.path.dirname(__file__), '../private/song-pickles')
-graph_file = os.path.join(os.path.dirname(__file__), '../data/song-graph-data.csv')
-
-history_length = 120
+history_length = 90
 
 def log(msg):
+    print(msg)
     with open(log_file, 'a') as f:
         f.write('[%s] %s\n' % (str(datetime.now()), msg))
 
@@ -27,7 +30,7 @@ def path_days_ago(days_ago):
     return path
 
 def get_songs_for_date(date_str, page=1):
-    log("get_songs_for_date %s %d" % (date_str, page))
+    # log("get_songs_for_date %s %d" % (date_str, page))
 
     url = 'https://www.last.fm/user/evanxq/library?to=%s&from=%s&page=%d' \
             % (date_str, date_str, page)
@@ -52,12 +55,39 @@ def update_all():
             counter = get_songs_for_date(os.path.split(path)[1].split('.')[0])
             with lzma.open(path, 'wb') as f:
                 pickle.dump(counter, f)
-            log(str(counter))
+            # log(str(counter))
+
+def split_artist_list(list_str):
+    artists_tmp = list_str.split(', ')
+    artists = []
+    for a in artists_tmp:
+        artists += a.split(' & ')
+    return artists
+
+def song_to_artists(song_str):
+    splt = song_str.split(' — ')
+    if len(splt) != 2:
+        log("song string %s cannot be converted to artists" % song_str)
+        return Counter()
+    artists = split_artist_list(splt[0])
+
+    m = re.search(r'\(.* remix\)', splt[1])
+    if m:
+        # print(split_artist_list(m.string[m.start()+1:m.end()-7]))
+        artists += split_artist_list(m.string[m.start()+1:m.end()-7])
+    return artists
+
+def songs_to_artists(songs_counter):
+    artists = Counter()
+    for song, count in songs_counter.items():
+        this_artists = song_to_artists(song)
+        artists.update(this_artists * count)
+    return artists
 
 def gen_graph_csv():
     m = history_length
-    n = 25 # num songs to graph
-    sigma = 3
+    n = 15 # num songs to graph
+    sigma = 4
 
     day_counters = []
     overall_counter = Counter()
@@ -68,9 +98,9 @@ def gen_graph_csv():
             day_counters.append(counter)
             overall_counter.update(counter)
 
-    with open(graph_file, 'w') as f:
+    with open(song_graph_file, 'w') as f:
         csv_writer = csv.writer(f)
-        csv_writer.writerow(['title','count']+['x%d'%i for i in range(m)])
+        csv_writer.writerow(['name','count']+['x%d'%i for i in range(m)])
         for title, count in overall_counter.most_common(n):
             arr = np.zeros(m)
             for i in range(m):
@@ -79,22 +109,43 @@ def gen_graph_csv():
             csv_writer.writerow([title, count] + ['0' if x<0.01 else '%.2f'%x for x in arr])
 
 
+    n = 15 # num artists to graph
+    sigma = 3
+
+    day_counters = []
+    overall_counter = Counter()
+    for days_ago in range(m-1, -1, -1):
+        path = path_days_ago(days_ago)
+        with lzma.open(path, 'rb') as f:
+            counter = pickle.load(f)
+            day_artists = songs_to_artists(counter)
+            day_counters.append(day_artists)
+            overall_counter.update(day_artists)
+
+    with open(artist_graph_file, 'w') as f:
+        csv_writer = csv.writer(f)
+        csv_writer.writerow(['name','count']+['x%d'%i for i in range(m)])
+        for artist, count in overall_counter.most_common(n):
+            arr = np.zeros(m)
+            for i in range(m):
+                arr[i] = day_counters[i][artist]
+            arr = gaussian_filter1d(arr, sigma, mode='reflect')
+            csv_writer.writerow([artist, count] + ['0' if x<0.01 else '%.2f'%x for x in arr])
+
+
 if __name__ == '__main__':
     if not os.path.exists(pkl_dir):
         os.makedirs(pkl_dir)
     if not os.path.exists(os.path.dirname(log_file)):
         os.makedirs(os.path.dirname(log_file))
 
-    while True:
-        try:
-            update_all()
-        except:
-            log("error on update_all")
+    try:
+        update_all()
+    except:
+        log("error on update_all: " + str(sys.exc_info()[0]))
 
-        try:
-            gen_graph_csv()
-        except:
-            log("error on gen_graph_csv")
-        
-        # time.sleep(60 * 10)
-        sys.exit(0)
+    try:
+        gen_graph_csv()
+    except:
+        log("error on gen_graph_csv: " + str(sys.exc_info()[0]))
+

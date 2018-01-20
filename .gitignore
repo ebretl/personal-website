@@ -1,4 +1,4 @@
 private/song-pickles/
 private/logs/
 
-data/song-graph-data\.csv
+data/*-graph-data\.csv
